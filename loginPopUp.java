@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
+
 public class loginPopUp extends JFrame 
 {
 	public static void main(String[] args)
@@ -49,4 +50,3 @@ public class loginPopUp extends JFrame
 	public static final int DEFAULT_WIDTH = 300;
 	public static final int DEFAULT_HEIGHT = 150;
 }
-
