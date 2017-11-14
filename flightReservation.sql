@@ -85,8 +85,8 @@ drop PROCEDURE if exists archivedReservation;
 delimiter //
 create PROCEDURE archivedReservation(IN value varchar(55))
 BEGIN
-insert into Archive select uid,fid,updatedAt from reservation where date(updatedAt) > value ;
-delete from reservation where date(updatedAt) > value;
+insert into Archive select uid,fid,updatedAt from reservation where date(updatedAt) < value ;
+delete from reservation where date(updatedAt) < value;
 END; //
 delimiter ;
 
@@ -105,11 +105,13 @@ insert into flightList(aName,numSeats) values ('Turkish',130);
 
 
 
-insert into reservation values (100,200,current_date(),"2017-11-13 18:19:03");
-insert into reservation values (100,201,current_date(),"2017-11-14 18:19:03");
-insert into reservation values (100,202,current_date(),"2017-11-15 18:19:03");
+insert into reservation values (101,200,current_date(),"2017-11-13 18:19:03");
+insert into reservation values (101,201,current_date(),"2017-11-14 18:19:03");
+insert into reservation values (102,201,current_date(),"2017-11-15 18:19:03");
 insert into reservation values (102,202,current_date(),"2017-11-16 18:19:03");
 insert into reservation values (101,202,current_date(),"2017-11-17 18:19:03");
 
 /*after the insertions the reservation table will have 5 entries, when we call ' call archivedReservation("2017-11-15"); ' , then reservation will have 3 entries and Archive relation will have two entries*/
-call archivedReservation("2017-11-15");
+call archivedReservation("2017-11-16");
+
+
