@@ -5,7 +5,6 @@ import java.util.*;
 import java.sql.*;
 
 
-
 public class adminPopUp extends JFrame{
 	
 	//Create connection to DatabaseAccessObject/DB class
@@ -42,11 +41,11 @@ public class adminPopUp extends JFrame{
 		JButton addUserButton = new JButton("Add User");
 		JButton addFlightButton = new JButton("Add Flight");
 		JButton cancelButton = new JButton("Cancel");
+		JButton showUsersButton = new JButton("Show Current Users");
+		JButton showFlightsButton = new JButton("Show Current Flights");
 		
 		JPanel northPanel = new JPanel();
-//		northPanel.setLayout(new GridLayout(1,3));
 		northPanel.setLayout(new BoxLayout(northPanel, BoxLayout.PAGE_AXIS));
-//		northPanel.add(new JLabel("uID: ", SwingConstants.LEFT));
 		northPanel.add(new JLabel("uID: "));
 		northPanel.add(uIDText);
 		northPanel.add(deleteUserButton);
@@ -65,11 +64,29 @@ public class adminPopUp extends JFrame{
 		northPanel.add(addFlightButton);
 		
 		JPanel southPanel = new JPanel();
+		southPanel.add(showUsersButton);
+		southPanel.add(showFlightsButton);
 		southPanel.add(cancelButton);
 		
 		
 		add(northPanel, BorderLayout.NORTH);
 		add(southPanel, BorderLayout.SOUTH);
+		
+		//Show Current Users from DB
+		showUsersButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent arg0) {
+				currentUsers currentUsersBox = new currentUsers();
+				currentUsersBox.setVisible(true);		
+			}
+		});
+		
+		//Show Current Flights from DB
+		showFlightsButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent arg0) {
+				currentFlights currentFlightsBox = new currentFlights();
+				currentFlightsBox.setVisible(true);			
+			}
+		});
 
 		//Delete user from DB
 		deleteUserButton.addActionListener(new ActionListener(){
@@ -128,7 +145,7 @@ public class adminPopUp extends JFrame{
 				}
 			}
 		});
-//		showCurrentUsers.addActionListener(new ActionListener(){
+//		showUsersButton.addActionListener(new ActionListener(){
 //			public void actionPerformed(ActionEvent e) {
 //				try{
 //					Statement result = myConn.createStatement();
