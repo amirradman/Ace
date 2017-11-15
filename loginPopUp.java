@@ -48,5 +48,5 @@ public class loginPopUp extends JFrame
 	}
 	
 	public static final int DEFAULT_WIDTH = 300;
-	public static final int DEFAULT_HEIGHT = 150;
+	public static final int DEFAULT_HEIGHT = 180;
 }
