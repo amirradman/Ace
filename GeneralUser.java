@@ -12,8 +12,11 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+
+import com.mysql.jdbc.Statement;
 
 public class GeneralUser extends JFrame{
 	
@@ -23,7 +26,6 @@ public class GeneralUser extends JFrame{
 		
 	public static void main(String[] args)
 	{
-		
 		EventQueue.invokeLater(new Runnable() 
 		{
 			public void run()
@@ -40,7 +42,7 @@ public class GeneralUser extends JFrame{
 	
 	public GeneralUser()
 	{
-		setTitle("User");
+		setTitle("General User");
 		setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 	
 		final JTextField nameText = new JTextField();
@@ -54,12 +56,12 @@ public class GeneralUser extends JFrame{
 	
 	
 	
-		JButton addUserButton = new JButton("Add User");
+		JButton addUserButton = new JButton("Register");
 		JButton reserveButton = new JButton("Reserve Flight");
 		JButton findFlight = new JButton("Find Flight");
 		JButton notReservedFlights = new JButton("Not Reserved Flights");
 		JButton findHighSeason = new JButton("Find High Season(s)");
-		JButton showUsersButton = new JButton("Show Current Users");
+//		JButton showUsersButton = new JButton("Show Current Users");
 		JButton flightswithseats = new JButton("Show flights with given seat number");
 		JButton cancelReservationButton = new JButton("Cancel Reservation");
 	
@@ -112,7 +114,7 @@ public class GeneralUser extends JFrame{
 		//Features that do not require user input-Return data statistics
 		southPanel.add(notReservedFlights);
 		southPanel.add(findHighSeason);
-		southPanel.add(showUsersButton);
+//		southPanel.add(showUsersButton);
 		
 		
 		add(northPanel, BorderLayout.NORTH);
@@ -123,18 +125,29 @@ public class GeneralUser extends JFrame{
 		//ActionListener to create a user
 		addUserButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				String namevalue = nameText.getText();
-				String agevalue = ageText.getText();
+				String namevalue = nameText.getText().trim();
+				String agevalue = ageText.getText().trim();
 				PreparedStatement stmt = null;
 				try{
-					stmt = myConn.prepareStatement("insert into user(uName,age) values(?,?)");
+					stmt = myConn.prepareStatement("insert into user(uName,age) values(?,?)",Statement.RETURN_GENERATED_KEYS);
+					if(namevalue.trim().isEmpty() || agevalue.trim().isEmpty())
+					{
+						JOptionPane.showMessageDialog(null, "Please provide name & age !");
+					}
+					else{
 					stmt.setString(1, namevalue);
 					stmt.setString(2, agevalue);
 					stmt.executeUpdate();
 					
+					ResultSet rs = stmt.getGeneratedKeys();
+					if(rs.next())
+					{
+						JOptionPane.showMessageDialog(null, "Registered Successfully. \n Your id is: "+rs.getInt(1));
+					}
+					
 					nameText.setText("");
 					ageText.setText("");
-				}
+				}}
 				catch(Exception exc){
 					exc.printStackTrace();
 				}
@@ -151,18 +164,26 @@ public class GeneralUser extends JFrame{
 		//Cancel Reservation
 		cancelReservationButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
-				String uid = uidCanceledReserve.getText();
-				String fid = fidCanceledReserve.getText();
+				String uid = uidCanceledReserve.getText().trim();
+				String fid = fidCanceledReserve.getText().trim();
 				PreparedStatement stmt = null;
 				try{
 					stmt = myConn.prepareStatement("insert into canceledReservation(uid,fid,canceledDate) values(?,?,current_Date())");
+					if(uid.trim().isEmpty() || fid.trim().isEmpty())
+					{
+						JOptionPane.showMessageDialog(null, "Please provide User ID and Flight ID !");
+					}
+					else{
 					stmt.setString(1, uid);
 					stmt.setString(2, fid);
 					stmt.executeUpdate();
 				
 					uidCanceledReserve.setText("");
 					fidCanceledReserve.setText("");
-				}
+					
+					JOptionPane.showMessageDialog(null, "Cancellation successful !");
+
+				}}
 				catch(Exception exc)
 				{
 					exc.printStackTrace();
@@ -183,28 +204,35 @@ public class GeneralUser extends JFrame{
 		// Actionlistener to make reservation
 		reserveButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
-				String uid = uidReserve.getText();
-				String fid = fidReserve.getText();
+				String uid = uidReserve.getText().trim();
+				String fid = fidReserve.getText().trim();
 				PreparedStatement result = null;
 				try{
 					result = myConn.prepareStatement("insert into reservation(uid,fid,reservedDate) values(?,?,current_Date())");
+					if(uid.trim().isEmpty() || fid.trim().isEmpty())
+					{
+						JOptionPane.showMessageDialog(null, "Please provide User ID and Flight ID !");
+					}
+					else{
 					result.setString(1, uid);
 					result.setString(2, fid);
 					result.executeUpdate();
-				
+					
 					uidReserve.setText("");
 					fidReserve.setText("");
-				}
-				catch(Exception exc)
+					
+					JOptionPane.showMessageDialog(null, "Reservation successful !");
+				}}
+				catch(SQLException exc)
 				{
-					exc.printStackTrace();
+					JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 				}
 				finally{
 					try{
 						result.close();
 					}
 					catch(SQLException exc){
-						exc.printStackTrace();
+						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 
 					}
 				}
@@ -214,13 +242,18 @@ public class GeneralUser extends JFrame{
 		//ActionListener to find a flight using airline Name
 		findFlight.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				String airlineName = aName.getText();
+				String airlineName = aName.getText().trim();
 				PreparedStatement stmt = null;
 				try{
 					
 		            Choice choices = new Choice();
 		            JFrame frame = new JFrame("Locate flights with airline name");
 					stmt = myConn.prepareStatement("Select * from flightList where aName = ?");
+					if(airlineName.trim().isEmpty())
+					{
+						JOptionPane.showMessageDialog(null, "Please provide airline name !");
+					}
+					else{
 					stmt.setString(1, airlineName);
 					stmt.executeQuery();
 					
@@ -228,26 +261,29 @@ public class GeneralUser extends JFrame{
 					aName.setText("");
 					
 					ResultSet rs = stmt.executeQuery();
+			        if(!rs.isBeforeFirst())
+			        	JOptionPane.showMessageDialog(null, airlineName+" airline was not found !");
+					else{
 		        while (rs.next()) {
 		            String fid = rs.getString("fid");
 		            String aName = rs.getString("aName");
 		            String numSeats = rs.getString("numSeats");
-		            String Query = fid +" "+ aName + " "+numSeats;
+					String Query = "Flight ID | Airline Name | Seats"+" => "+fid +" | "+ aName + " | "+numSeats;
 		            choices.addItem(Query);
 		            frame.add(choices);
 		            frame.setSize(350, 150);
 		            frame.setVisible(true);
 					frame.setLocationRelativeTo(null);
 		        }}
-				catch(Exception exc){
-					exc.printStackTrace();
+		  }}
+				catch(SQLException exc){
+					JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 				}
 				finally{
 					try {
 						stmt.close();
-					} catch (SQLException e1) {
-						e1.printStackTrace();
-					}
+					} catch (SQLException exc) {
+						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());					}
 				}
 			}
 		});
@@ -261,30 +297,32 @@ public class GeneralUser extends JFrame{
 		            Choice choices = new Choice();
 		            JFrame frame = new JFrame("Flights with 0 reservations");
 					stmt = myConn.prepareStatement("select FL.fid,aName,numSeats,uid,reservedDate from flightList FL left Outer JOIN reservation R on FL.fid = R.fid;");
-					aName.setText("");
 					
 					ResultSet rs = stmt.executeQuery();
-		        while (rs.next()) {
-		            String fid = rs.getString("fid");
-		            String aName = rs.getString("aName");
-		            String numSeats = rs.getString("numSeats");
-		            String uid = rs.getString("uid");
-		            String reservedDate = rs.getString("reservedDate");
-		            String Query = fid +" "+ aName + " "+numSeats+" "+ uid + " "+reservedDate;
-		            choices.addItem(Query);
-		            frame.add(choices);
-		            frame.setSize(350, 150);
-		            frame.setVisible(true);
-					frame.setLocationRelativeTo(null);
+			    if(!rs.isBeforeFirst())
+			    	JOptionPane.showMessageDialog(null, "There are currently no flights !");
+				else{
+					while (rs.next()) {
+						String fid = rs.getString("fid");
+						String aName = rs.getString("aName");
+						String numSeats = rs.getString("numSeats");
+						String reservedDate = rs.getString("reservedDate");
+						String Query = "ID | Airline | Seats | Reservation Date"+" => "+fid +" | "+ aName + " | "+numSeats+" | "+reservedDate;
+						choices.addItem(Query);
+						frame.add(choices);
+						frame.setSize(350, 150);
+						frame.setVisible(true);
+						frame.setLocationRelativeTo(null);
 		        }}
-				catch(Exception exc){
-					exc.printStackTrace();
+			}
+				catch(SQLException exc){
+					JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 				}
 				finally{
 					try {
 						stmt.close();
-					} catch (SQLException e1) {
-						e1.printStackTrace();
+					} catch (SQLException exc) {
+						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 					}
 				}
 			}
@@ -299,106 +337,79 @@ public class GeneralUser extends JFrame{
 		            Choice choices = new Choice();
 		            JFrame frame = new JFrame("High Season Month(s)");
 					stmt = myConn.prepareStatement("select distinct MonthName(reservedDate) as 'High Season Month(s)' from reservation group by Month(reservedDate) having(count(*)>=3)");
-					
-					aName.setText("");
-					
+									
 					ResultSet rs = stmt.executeQuery();
-		        while (rs.next()) {
-		            String Season = rs.getString("High Season Month(s)");
-		            String Query = Season;
-		            choices.addItem(Query);
-		            frame.add(choices);
-		            frame.setSize(350, 150);
-		            frame.setVisible(true);
-					frame.setLocationRelativeTo(null);
+			    if(!rs.isBeforeFirst())
+			    	JOptionPane.showMessageDialog(null, "There are currently no high season(s) !");
+				else{
+					while (rs.next()) {
+						String Season = rs.getString("High Season Month(s)");
+						String Query = "High Season Month => "+Season;
+						choices.addItem(Query);
+						frame.add(choices);
+						frame.setSize(350, 150);
+						frame.setVisible(true);
+						frame.setLocationRelativeTo(null);
 		        }}
-				catch(Exception exc){
-					exc.printStackTrace();
+		}
+				catch(SQLException exc){
+					JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 				}
 				finally{
 					try {
 						stmt.close();
-					} catch (SQLException e1) {
-						e1.printStackTrace();
+					} catch (SQLException exc) {
+						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 					}
 				}
 			}
 		});
 		
-		
-		//Show Current Users
-		showUsersButton.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent arg0) {
-				PreparedStatement stmt = null;
-		        try {
-		            Choice choices = new Choice();
-		             JFrame frame = new JFrame("Current Users");
-		             stmt =  myConn.prepareStatement("Select * from user");
-		             ResultSet rs = stmt.executeQuery();
-		        while (rs.next()) {
-		            String uid = rs.getString("uid");
-		            String uName = rs.getString("uName");
-		            String age = rs.getString("age");
-		            String Query = uid +" "+ uName + " "+age;
-		            choices.addItem(Query);
-		            frame.add(choices);
-		            frame.setSize(350, 150);
-		            frame.setVisible(true);
-					frame.setLocationRelativeTo(null);
-
-		        }
-
-		    } catch (SQLException e) {
-
-		    	e.printStackTrace();
-		    	}
-		        finally{
-		        	try {
-						stmt.close();
-					} catch (SQLException e2) {
-						// TODO: handle exception
-						e2.printStackTrace();
-					}
-		        }
-			}
-		});
-		
+				
 		
 		//Find flights with certain # seats
 		flightswithseats.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
 				PreparedStatement stmt = null;
-				String seat = seatNum.getText();
+				String seat = seatNum.getText().trim();
 		        try {
 		            Choice choices = new Choice();
 		             JFrame frame = new JFrame("Flights with __ Seats");
 		             stmt =  myConn.prepareStatement("Select * from flightList where numSeats = ?");
+						if(seat.trim().isEmpty())
+						{
+							JOptionPane.showMessageDialog(null, "Please provide number of seats per flight !");
+						}
+						else{
 		             stmt.setString(1,seat);
 		             ResultSet rs = stmt.executeQuery();
-		        while (rs.next()) {
-		            String fid = rs.getString("fid");
-		            String airlineName = rs.getString("aName");
-		            String numSeat = rs.getString("numSeats");
-		            String Query = fid +" "+ airlineName + " "+numSeat;
-		            choices.addItem(Query);
-		            frame.add(choices);
-		            frame.setSize(350, 150);
-		            frame.setVisible(true);
-					frame.setLocationRelativeTo(null);
-
-		        }
-
-		    } catch (SQLException e) {
-
-		    	e.printStackTrace();
-		    	}
+		             
+		             seatNum.setText("");
+		        if(!rs.isBeforeFirst())
+		        	JOptionPane.showMessageDialog(null, "There are no flights with "+seat+" seats");
+				else{
+					while (rs.next()) {
+						String fid = rs.getString("fid");
+						String airlineName = rs.getString("aName");
+						String numSeat = rs.getString("numSeats");
+						String Query = "Flight ID | Airline Name | Seats"+" => "+fid +" | "+ airlineName + " | "+numSeat;
+						choices.addItem(Query);
+						frame.add(choices);
+						frame.setSize(350, 150);
+						frame.setVisible(true);
+						frame.setLocationRelativeTo(null);
+		        }}
+		    } }
+				catch (SQLException exc) {
+					JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+				}
 		        finally{
 		        	try{
 		        		stmt.close();
 		        	}
 		        	catch(SQLException exc)
 		        	{
-		        		exc.printStackTrace();
+		        		JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 		        	}
 		        }
 			}

@@ -29,14 +29,14 @@ public class adminPopUp extends JFrame{
 
 	public adminPopUp()
 	{
-		setTitle("Admin");
+		setTitle("Administrator");
 		setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 		
 		final JTextField uIDText = new JTextField();
 		final JTextField aNameText = new JTextField();
 		final JTextField numOfSeatsText = new JTextField();
 		final JTextField flightID = new JTextField();
-		final JTextField archiveDate = new JTextField("YYYY-MM-DD");
+		final JTextField archiveDate = new JTextField();
 		final JTextField reservedAge = new JTextField();
 		final JTextField canceledAge = new JTextField();
 		final JTextField cencellationQuantity = new JTextField();
@@ -53,7 +53,7 @@ public class adminPopUp extends JFrame{
 		JButton cancellationAge = new JButton("Cancellation Statistics");
 		JButton loyalCustomer = new JButton("Loyal Customers");
 		JButton reservationAverageAge = new JButton("AvgAge of users with reservation");
-		JButton numUsercancellations = new JButton("Users with given # of cancellations");
+		JButton numUsercancellations = new JButton("Users with more than __ cancellations");
 		
 		JPanel northPanel = new JPanel();
 //		northPanel.setLayout(new GridLayout(1,3));
@@ -79,7 +79,7 @@ public class adminPopUp extends JFrame{
 		
 		northPanel.add(new JLabel("                                                  "));
 		
-		northPanel.add(new JLabel("Enter Date to archive: "));
+		northPanel.add(new JLabel("Enter Date(YYYY-MM-DD) to archive: "));
 		northPanel.add(archiveDate);
 		northPanel.add(archiveButton);
 		
@@ -98,7 +98,7 @@ public class adminPopUp extends JFrame{
 		
 		northPanel.add(new JLabel("                                                  "));
 		
-		northPanel.add(new JLabel("Users with __ number of flight Cancellation"));
+		northPanel.add(new JLabel("Users with more than __  cancellation(s): "));
 		northPanel.add(cencellationQuantity);
 		northPanel.add(numUsercancellations);
 		
@@ -118,45 +118,72 @@ public class adminPopUp extends JFrame{
 		//Delete user from DB
 		deleteUserButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
-				
-				String uidvalue = uIDText.getText();
+				String uidvalue = uIDText.getText().trim();
+				PreparedStatement stmt = null;
 				try{
-					PreparedStatement stmt = myConn.prepareStatement("delete from user where uid = ?");
+					stmt = myConn.prepareStatement("delete from user where uid = ?");
+					if(uidvalue.trim().isEmpty())
+					{
+						JOptionPane.showMessageDialog(null, "Please provide User ID !");
+					}
+					else{
 					stmt.setString(1,uidvalue);
 					stmt.executeUpdate();
 					
+					JOptionPane.showMessageDialog(null, "User deleted Successfully !");
+
+					
 					uIDText.setText("");
-				}				
+			}}	
 				catch(SQLException exc)
 				{
-					exc.printStackTrace();
+					JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+				}
+				finally{
+					try{
+						stmt.close();
+					}
+					catch(SQLException exc){
+						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+					}
 				}
 			}
 		});
 		//adding flights to database
 		addFlightButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				String aName = aNameText.getText();
-				String numOfSeats = numOfSeatsText.getText();
+				String aName = aNameText.getText().trim();
+				String numOfSeats = numOfSeatsText.getText().trim();
 				PreparedStatement stmt = null;
 				try{
-					stmt = myConn.prepareStatement("insert into flightList(aName,numSeats) values(?,?)");
+					stmt = myConn.prepareStatement("insert into flightList(aName,numSeats) values(?,?)",Statement.RETURN_GENERATED_KEYS);
+					if(aName.trim().isEmpty() || numOfSeats.trim().isEmpty())
+					{
+						JOptionPane.showMessageDialog(null, "Please provide airline name and number of seats !");
+					}
+					else{
 					stmt.setString(1, aName);
 					stmt.setString(2, numOfSeats);
 					stmt.executeUpdate();
 					
+					ResultSet rs = stmt.getGeneratedKeys();
+					if(rs.next())
+					{
+						JOptionPane.showMessageDialog(null, "Flight added Successfully. \n Flight id is: "+rs.getInt(1));
+					}
+					
 					aNameText.setText("");
 					numOfSeatsText.setText("");
-				}
+				}}
 				catch(SQLException exc){
-					exc.printStackTrace();
+					JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 				}
 				finally{
 					try{
 						stmt.close();
 					}
-					catch(SQLException e2){
-						e2.printStackTrace();
+					catch(SQLException exc){
+						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 					}
 				}
 			}
@@ -165,24 +192,31 @@ public class adminPopUp extends JFrame{
 		//Delete flights from Database
 		deleteFlightButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				String fid = flightID.getText();
+				String fid = flightID.getText().trim();
 				PreparedStatement stmt = null;
 				try{
 					stmt = myConn.prepareStatement("Delete from flightList where fid = ? ");
+					if(fid.trim().isEmpty())
+					{
+						JOptionPane.showMessageDialog(null, "Please provide flight ID !");
+					}
+					else{
 					stmt.setString(1, fid);
 					stmt.executeUpdate();
 					
+					JOptionPane.showMessageDialog(null, "Flight deleted Successfully");
+					
 					flightID.setText("");
-				}
+				}}
 				catch(SQLException exc){
-					exc.printStackTrace();
+					JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 				}
 				finally{
 					try{
 						stmt.close();
 					}
-					catch(SQLException e2){
-						e2.printStackTrace();
+					catch(SQLException exc){
+						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 					}
 				}
 			}
@@ -193,11 +227,16 @@ public class adminPopUp extends JFrame{
 		reservationAge.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
 				PreparedStatement stmt = null;
-				String getAge = reservedAge.getText();
+				String getAge = reservedAge.getText().trim();
 				try {
 		            Choice choices = new Choice();
 		             JFrame frame = new JFrame("User's reservation with age > __");
 		             stmt =  myConn.prepareStatement("select * from user JOIN reservation using(uID) group by uid having(age > ?)");
+						if(getAge.trim().isEmpty())
+						{
+							JOptionPane.showMessageDialog(null, "Please provide the age !");
+						}
+						else{
 		             stmt.setString(1, getAge);
 		             ResultSet rs = stmt.executeQuery();
 		             
@@ -206,25 +245,23 @@ public class adminPopUp extends JFrame{
 		            String uid = rs.getString("uid");
 		            String uName = rs.getString("uName");
 		            String age = rs.getString("age");
-		            String Query = uid +" "+ uName + " "+age;
+		            String Query = "User ID | User Name | Age"+" => "+uid +" | "+ uName + " | "+age;
 		            choices.addItem(Query);
 		            frame.add(choices);
 		            frame.setSize(350, 150);
 		            frame.setVisible(true);
 					frame.setLocationRelativeTo(null);
 
-		        }
-
-		    } catch (SQLException e) {
-
-		    	e.printStackTrace();
+		        }}
+		    } catch (SQLException exc) {
+		    	JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 		    	}
 				finally{
 					try{
 						stmt.close();
 					}
-					catch(SQLException e){
-						e.printStackTrace();
+					catch(SQLException exc){
+						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 					}
 				}
 			}
@@ -234,11 +271,16 @@ public class adminPopUp extends JFrame{
 		cancellationAge.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
 				PreparedStatement stmt = null;
-				String cancelAge = canceledAge.getText();
+				String cancelAge = canceledAge.getText().trim();
 				try {
 		            Choice choices = new Choice();
 		             JFrame frame = new JFrame("User's cancellation with age > __");
 		             stmt =  myConn.prepareStatement("select * from user JOIN canceledReservation using(uID) group by uid having(age > ?)");
+						if(cancelAge.trim().isEmpty())
+						{
+							JOptionPane.showMessageDialog(null, "Please provide the age !");
+						}
+						else{
 		             stmt.setString(1, cancelAge);
 		             ResultSet rs = stmt.executeQuery();
 		             
@@ -247,25 +289,24 @@ public class adminPopUp extends JFrame{
 		            String uid = rs.getString("uid");
 		            String uName = rs.getString("uName");
 		            String age = rs.getString("age");
-		            String Query = uid +" "+ uName + " "+age;
+		            String Query = "User ID | User Name | Age"+" => "+uid +" | "+ uName + " | "+age;
 		            choices.addItem(Query);
 		            frame.add(choices);
 		            frame.setSize(350, 150);
 		            frame.setVisible(true);
 					frame.setLocationRelativeTo(null);
 
-		        }
+		        }}
+		    } catch (SQLException exc) {
 
-		    } catch (SQLException e) {
-
-		    	e.printStackTrace();
+		    	JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 		    	}
 				finally{
 					try{
 						stmt.close();
 					}
-					catch(SQLException e){
-						e.printStackTrace();
+					catch(SQLException exc){
+						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 					}
 				}
 			}
@@ -275,11 +316,16 @@ public class adminPopUp extends JFrame{
 		numUsercancellations.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
 				PreparedStatement stmt = null;
-				String cancelQuantity = cencellationQuantity.getText();
+				String cancelQuantity = cencellationQuantity.getText().trim();
 				try {
 		            Choice choices = new Choice();
 		             JFrame frame = new JFrame("Users with more than __ cancellations");
 		             stmt =  myConn.prepareStatement("Select uid,uname,age from user u1 where ? < (select count(*) from canceledreservation where u1.uid = uid group by uid)");
+						if(cancelQuantity.trim().isEmpty())
+						{
+							JOptionPane.showMessageDialog(null, "Please provide a value !");
+						}
+						else{
 		             stmt.setString(1, cancelQuantity);
 		             ResultSet rs = stmt.executeQuery();
 		             
@@ -288,25 +334,23 @@ public class adminPopUp extends JFrame{
 		            String uid = rs.getString("uid");
 		            String uName = rs.getString("uName");
 		            String age = rs.getString("age");
-		            String Query = uid +" "+ uName + " "+age;
+		            String Query = "User ID | User Name | Age"+" => "+uid +" | "+ uName + " | "+age;
 		            choices.addItem(Query);
 		            frame.add(choices);
 		            frame.setSize(350, 150);
 		            frame.setVisible(true);
 					frame.setLocationRelativeTo(null);
 
-		        }
-
-		    } catch (SQLException e) {
-
-		    	e.printStackTrace();
+		        }}
+		    } catch (SQLException exc) {
+		    	JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 		    	}
 				finally{
 					try{
 						stmt.close();
 					}
-					catch(SQLException e){
-						e.printStackTrace();
+					catch(SQLException exc){
+						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 					}
 				}
 			}
@@ -319,26 +363,33 @@ public class adminPopUp extends JFrame{
 			public void actionPerformed(ActionEvent arg0)
 			{
 				CallableStatement cstmt = null;
-				String date = archiveDate.getText();
+				String date = archiveDate.getText().trim();
 				try { 
 					String sql = "{call archivedReservation(?)}";
 				
 				cstmt = myConn.prepareCall(sql);
+				if(date.trim().isEmpty())
+				{
+					JOptionPane.showMessageDialog(null, "Please provide a date, formated 'YYYY-MM-DD' ");
+				}
+				else{
 				cstmt.setString(1,date);
 				cstmt.execute();
 				
+				JOptionPane.showMessageDialog(null, "Data archived successfully");
+
+				
 				archiveDate.setText(" ");
-				}
+				}}
 				catch(SQLException exc)
 				{
-					exc.printStackTrace();
+					JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 				}
 				finally{
 					try {
 						cstmt.close();
-					} catch (SQLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+					} catch (SQLException exc) {
+						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 					}
 				}
 			}
@@ -353,29 +404,31 @@ public class adminPopUp extends JFrame{
 		             JFrame frame = new JFrame("Current Users");
 		             stmt =  myConn.prepareStatement("Select * from user");
 		             ResultSet rs = stmt.executeQuery();
-		        while (rs.next()) {
-		            String uid = rs.getString("uid");
-		            String uName = rs.getString("uName");
-		            String age = rs.getString("age");
-		            String Query = uid +" "+ uName + " "+age;
-		            choices.addItem(Query);
-		            frame.add(choices);
-		            frame.setSize(350, 150);
-		            frame.setVisible(true);
-					frame.setLocationRelativeTo(null);
+		        if(!rs.isBeforeFirst())
+		        	JOptionPane.showMessageDialog(null, "There are currently no users");
+				else{
+					while (rs.next()) {
+						String uid = rs.getString("uid");
+						String uName = rs.getString("uName");
+						String age = rs.getString("age");
+						String Query = "User ID | User Name | Age"+" => "+uid +" | "+ uName + " | "+age;
+						choices.addItem(Query);
+						frame.add(choices);
+						frame.setSize(350, 150);
+						frame.setVisible(true);
+						frame.setLocationRelativeTo(null);
 
-		        }
+					}}
 
-		    } catch (SQLException e) {
-
-		    	e.printStackTrace();
+		    } catch (SQLException exc) {
+		    	JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 		    	}
 				finally{
 					try{
 						stmt.close();
 					}
-					catch(SQLException e){
-						e.printStackTrace();
+					catch(SQLException exc){
+						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 					}
 				}
 			}
@@ -393,27 +446,30 @@ public class adminPopUp extends JFrame{
 		             JFrame frame = new JFrame("Available Flights");
 		             stmt =  myConn.prepareStatement("Select * from flightList");
 		             ResultSet rs = stmt.executeQuery();
-		        while (rs.next()) {
-		            String fid = rs.getString("fid");
-		            String aName = rs.getString("aName");
-		            String numSeats = rs.getString("numSeats");
-		            String Query = fid +" "+ aName + " "+numSeats;
-		            choices.addItem(Query);
-		            frame.add(choices);
-		            frame.setSize(350, 150);
-		            frame.setVisible(true);
-					frame.setLocationRelativeTo(null);
-		        }
+				if(!rs.isBeforeFirst())
+					JOptionPane.showMessageDialog(null, "There are currently no flights");
+				else{
+					while (rs.next()) {
+						String fid = rs.getString("fid");
+						String aName = rs.getString("aName");
+						String numSeats = rs.getString("numSeats");
+						String Query = "Flight ID | Airline Name | Seats"+" => "+fid +" | "+ aName + " | "+numSeats;
+						choices.addItem(Query);
+						frame.add(choices);
+						frame.setSize(350, 150);
+						frame.setVisible(true);
+						frame.setLocationRelativeTo(null);
+		        }}
 
-		    } catch (SQLException e) {
-		    	e.printStackTrace();
+		    } catch (SQLException exc) {
+		    	JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 		    }
 		        finally{
 		        	try{
 		        		stmt.close();
 		        	}
-		        	catch(SQLException e2){
-		        		e2.printStackTrace();
+		        	catch(SQLException exc){
+		        		JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 		        	}
 		        }
 			}
@@ -428,25 +484,28 @@ public class adminPopUp extends JFrame{
 		             JFrame frame = new JFrame("Customers with reservation and NO Cancellation");
 		             stmt =  myConn.prepareStatement("select distinct uid from reservation where uid NOT IN (select uid from canceledreservation)");
 		             ResultSet rs = stmt.executeQuery();
-		        while (rs.next()) {
-		            String uid = rs.getString("uid");
-		            String Query = uid;
-		            choices.addItem(Query);
-		            frame.add(choices);
-		            frame.setSize(350, 150);
-		            frame.setVisible(true);
-					frame.setLocationRelativeTo(null);
-		        }
+		        if(!rs.isBeforeFirst())
+		        	JOptionPane.showMessageDialog(null, "There are currently no loyal customers");
+				else{
+					while (rs.next()) {
+						String uid = rs.getString("uid"); 
+						String Query = "user ID => "+uid;
+						choices.addItem(Query);
+						frame.add(choices);
+						frame.setSize(350, 150);
+						frame.setVisible(true);
+						frame.setLocationRelativeTo(null);
+		        }}
 
-		    } catch (SQLException e) {
-		    	e.printStackTrace();
+		    } catch (SQLException exc) {
+		    	JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 		    }
 		        finally{
 		        	try{
 		        		stmt.close();
 		        	}
-		        	catch(SQLException e2){
-		        		e2.printStackTrace();
+		        	catch(SQLException exc){
+		        		JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 		        	}
 		        }
 			}
@@ -461,34 +520,32 @@ public class adminPopUp extends JFrame{
 		             JFrame frame = new JFrame("Average age of users with reservation");
 		             stmt =  myConn.prepareStatement("select avg(age) as 'averageAge' from user U Natural join (select distinct uid from reservation group by uid) T");
 		             ResultSet rs = stmt.executeQuery();
-		        while (rs.next()) {
-		            String uid = rs.getString("averageAge");
-		            String Query = uid;
-		            choices.addItem(Query);
-		            frame.add(choices);
-		            frame.setSize(350, 150);
-		            frame.setVisible(true);
-					frame.setLocationRelativeTo(null);
-		        }
-
-		    } catch (SQLException e) {
-		    	e.printStackTrace();
+		             boolean empty = true;
+					while (rs.next()) {
+						if(empty)
+				        	JOptionPane.showMessageDialog(null, "There are currently no users with reservation");
+						else{
+						String averageAge = rs.getString("averageAge");
+						String Query = "Average age => "+averageAge;
+						choices.addItem(Query);
+						frame.add(choices);
+						frame.setSize(350, 150);
+						frame.setVisible(true);
+						frame.setLocationRelativeTo(null);
+		        }}
+		    } catch (SQLException exc) {
+		    	JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 		    }
 		        finally{
 		        	try{
 		        		stmt.close();
 		        	}
-		        	catch(SQLException e2){
-		        		e2.printStackTrace();
+		        	catch(SQLException exc){
+		        		JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 		        	}
 		        }
 			}
 		});
-		
-		
-		
-		
-		
 	}
 
 	
