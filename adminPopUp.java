@@ -520,19 +520,19 @@ public class adminPopUp extends JFrame{
 		             JFrame frame = new JFrame("Average age of users with reservation");
 		             stmt =  myConn.prepareStatement("select avg(age) as 'averageAge' from user U Natural join (select distinct uid from reservation group by uid) T");
 		             ResultSet rs = stmt.executeQuery();
-		             boolean empty = true;
 					while (rs.next()) {
-						if(empty)
-				        	JOptionPane.showMessageDialog(null, "There are currently no users with reservation");
-						else{
 						String averageAge = rs.getString("averageAge");
+						if(averageAge == null){
+				        	JOptionPane.showMessageDialog(null, "There are currently no users with reservation");
+				        	break;
+						}
 						String Query = "Average age => "+averageAge;
 						choices.addItem(Query);
 						frame.add(choices);
 						frame.setSize(350, 150);
 						frame.setVisible(true);
 						frame.setLocationRelativeTo(null);
-		        }}
+		        }
 		    } catch (SQLException exc) {
 		    	JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
 		    }
