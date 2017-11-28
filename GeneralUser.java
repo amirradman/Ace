@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -44,7 +45,8 @@ public class GeneralUser extends JFrame{
 	{
 		setTitle("General User");
 		setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
-	
+		
+		final JTextField reservedDate = new JTextField();
 		final JTextField nameText = new JTextField();
 		final JTextField ageText = new JTextField();
 		final JTextField uidReserve = new JTextField();
@@ -53,6 +55,7 @@ public class GeneralUser extends JFrame{
 		final JTextField seatNum = new JTextField();
 		final JTextField uidCanceledReserve = new JTextField();
 		final JTextField fidCanceledReserve = new JTextField();
+		final JTextField viewReservation = new JTextField();
 	
 	
 	
@@ -64,7 +67,7 @@ public class GeneralUser extends JFrame{
 //		JButton showUsersButton = new JButton("Show Current Users");
 		JButton flightswithseats = new JButton("Show flights with given seat number");
 		JButton cancelReservationButton = new JButton("Cancel Reservation");
-	
+		JButton viewReservationButton = new JButton("View my reservation(s)");
 	
 		JPanel northPanel = new JPanel();
 		JPanel southPanel = new JPanel();
@@ -107,20 +110,77 @@ public class GeneralUser extends JFrame{
 		northPanel.add(uidCanceledReserve);
 		northPanel.add(new JLabel ("Flight ID: "));
 		northPanel.add(fidCanceledReserve);
+		northPanel.add(new JLabel("Enter reserved Date(YYYY-MM-DD): "));
+		northPanel.add(reservedDate);
 		northPanel.add(cancelReservationButton);
+		northPanel.add(new JLabel("                                                                  "));
+		
+		
+		
+		northPanel.add(new JLabel ("User ID: "));
+		northPanel.add(viewReservation);
+		northPanel.add(viewReservationButton);
 		northPanel.add(new JLabel("                                                                  "));
 
 		
 		//Features that do not require user input-Return data statistics
 		southPanel.add(notReservedFlights);
 		southPanel.add(findHighSeason);
-//		southPanel.add(showUsersButton);
 		
 		
 		add(northPanel, BorderLayout.NORTH);
 		add(southPanel, BorderLayout.SOUTH);
 	
 	
+		//view a user's list of reservation
+		viewReservationButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				String viewID = viewReservation.getText().trim();
+				PreparedStatement stmt = null;
+				try{
+					
+		            Choice choices = new Choice();
+		            JFrame frame = new JFrame("Your reservation(s)");
+					stmt = myConn.prepareStatement("Select uid,fid,reservedDate from reservation where uid = ?");
+					if(viewID.isEmpty())
+					{
+						JOptionPane.showMessageDialog(null, "Please provide User ID !");
+					}
+					else{
+					stmt.setString(1, viewID);
+					stmt.executeQuery();
+					
+					
+					viewReservation.setText("");
+					
+					ResultSet rs = stmt.executeQuery();
+			        if(!rs.isBeforeFirst())
+			        	JOptionPane.showMessageDialog(null,"1: The provided UID ("+viewID+") does not exists \n or \n 2: The user has not made a reservation");
+					else{
+		        while (rs.next()) {
+		            String uid = rs.getString("uid");
+		            String fid = rs.getString("fid");
+		            String resDate = rs.getString("reservedDate");
+					String Query = "UID | FID | ReservedDate"+" => "+uid +" | "+ fid + " | "+resDate;
+		            choices.addItem(Query);
+		            frame.add(choices);
+		            frame.setSize(350, 150);
+		            frame.setVisible(true);
+					frame.setLocationRelativeTo(null);
+		        }}
+		  }}
+				catch(SQLException exc){
+					JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
+				}
+				finally{
+					try {
+						stmt.close();
+					} catch (SQLException exc) {
+						JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());					
+					}
+				}
+			}
+		});
 	
 		//ActionListener to create a user
 		addUserButton.addActionListener(new ActionListener(){
@@ -130,7 +190,7 @@ public class GeneralUser extends JFrame{
 				PreparedStatement stmt = null;
 				try{
 					stmt = myConn.prepareStatement("insert into user(uName,age) values(?,?)",Statement.RETURN_GENERATED_KEYS);
-					if(namevalue.trim().isEmpty() || agevalue.trim().isEmpty())
+					if(namevalue.isEmpty() || agevalue.isEmpty())
 					{
 						JOptionPane.showMessageDialog(null, "Please provide name & age !");
 					}
@@ -148,14 +208,14 @@ public class GeneralUser extends JFrame{
 					nameText.setText("");
 					ageText.setText("");
 				}}
-				catch(Exception exc){
-					exc.printStackTrace();
+				catch(SQLException exc){
+					JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());					
 				}
 				finally{
 					try {
 						stmt.close();
-					} catch (SQLException e1) {
-						e1.printStackTrace();
+					} catch (SQLException exc) {
+						JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 					}
 				}
 			}
@@ -166,35 +226,42 @@ public class GeneralUser extends JFrame{
 			public void actionPerformed(ActionEvent e) {
 				String uid = uidCanceledReserve.getText().trim();
 				String fid = fidCanceledReserve.getText().trim();
+				String reservationDate = reservedDate.getText().trim();
 				PreparedStatement stmt = null;
 				try{
-					stmt = myConn.prepareStatement("insert into canceledReservation(uid,fid,canceledDate) values(?,?,current_Date())");
-					if(uid.trim().isEmpty() || fid.trim().isEmpty())
+					stmt = myConn.prepareStatement("delete from Reservation where uid= ? and fid=? and reservedDate=?");
+					if(uid.isEmpty() || fid.isEmpty() || reservationDate.isEmpty())
 					{
-						JOptionPane.showMessageDialog(null, "Please provide User ID and Flight ID !");
+						JOptionPane.showMessageDialog(null, "Please provide User ID and Flight ID and reservation Date !");
 					}
 					else{
 					stmt.setString(1, uid);
 					stmt.setString(2, fid);
-					stmt.executeUpdate();
-				
-					uidCanceledReserve.setText("");
-					fidCanceledReserve.setText("");
+					stmt.setString(3, reservationDate);
+					int row = stmt.executeUpdate();
+					switch(row){
+					case 0: 
+						JOptionPane.showMessageDialog(null, "Unable to cancel with provided information !");
+						break;
+					case 1: 
+						JOptionPane.showMessageDialog(null, "Reservation cancelled successfully !");
+						uidCanceledReserve.setText("");
+						fidCanceledReserve.setText("");
+						reservedDate.setText("");
+						break;
+					}
 					
-					JOptionPane.showMessageDialog(null, "Cancellation successful !");
-
 				}}
-				catch(Exception exc)
+				catch(SQLException exc)
 				{
-					exc.printStackTrace();
+					JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 				}
 				finally{
 					try{
 						stmt.close();
 					}
 					catch(SQLException exc){
-						exc.printStackTrace();
-
+						JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 					}
 				}
 			}
@@ -209,7 +276,7 @@ public class GeneralUser extends JFrame{
 				PreparedStatement result = null;
 				try{
 					result = myConn.prepareStatement("insert into reservation(uid,fid,reservedDate) values(?,?,current_Date())");
-					if(uid.trim().isEmpty() || fid.trim().isEmpty())
+					if(uid.isEmpty() || fid.isEmpty())
 					{
 						JOptionPane.showMessageDialog(null, "Please provide User ID and Flight ID !");
 					}
@@ -225,14 +292,14 @@ public class GeneralUser extends JFrame{
 				}}
 				catch(SQLException exc)
 				{
-					JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+					JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 				}
 				finally{
 					try{
 						result.close();
 					}
 					catch(SQLException exc){
-						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+						JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 
 					}
 				}
@@ -249,7 +316,7 @@ public class GeneralUser extends JFrame{
 		            Choice choices = new Choice();
 		            JFrame frame = new JFrame("Locate flights with airline name");
 					stmt = myConn.prepareStatement("Select * from flightList where aName = ?");
-					if(airlineName.trim().isEmpty())
+					if(airlineName.isEmpty())
 					{
 						JOptionPane.showMessageDialog(null, "Please provide airline name !");
 					}
@@ -277,13 +344,14 @@ public class GeneralUser extends JFrame{
 		        }}
 		  }}
 				catch(SQLException exc){
-					JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+					JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 				}
 				finally{
 					try {
 						stmt.close();
 					} catch (SQLException exc) {
-						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());					}
+						JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
+					}
 				}
 			}
 		});
@@ -316,13 +384,13 @@ public class GeneralUser extends JFrame{
 		        }}
 			}
 				catch(SQLException exc){
-					JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+					JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 				}
 				finally{
 					try {
 						stmt.close();
 					} catch (SQLException exc) {
-						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+						JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 					}
 				}
 			}
@@ -353,13 +421,13 @@ public class GeneralUser extends JFrame{
 		        }}
 		}
 				catch(SQLException exc){
-					JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+					JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 				}
 				finally{
 					try {
 						stmt.close();
 					} catch (SQLException exc) {
-						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+						JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 					}
 				}
 			}
@@ -376,7 +444,7 @@ public class GeneralUser extends JFrame{
 		            Choice choices = new Choice();
 		             JFrame frame = new JFrame("Flights with __ Seats");
 		             stmt =  myConn.prepareStatement("Select * from flightList where numSeats = ?");
-						if(seat.trim().isEmpty())
+						if(seat.isEmpty())
 						{
 							JOptionPane.showMessageDialog(null, "Please provide number of seats per flight !");
 						}
@@ -401,7 +469,7 @@ public class GeneralUser extends JFrame{
 		        }}
 		    } }
 				catch (SQLException exc) {
-					JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+					JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 				}
 		        finally{
 		        	try{
@@ -409,7 +477,7 @@ public class GeneralUser extends JFrame{
 		        	}
 		        	catch(SQLException exc)
 		        	{
-		        		JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+		        		JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 		        	}
 		        }
 			}

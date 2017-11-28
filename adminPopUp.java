@@ -39,8 +39,7 @@ public class adminPopUp extends JFrame{
 		final JTextField archiveDate = new JTextField();
 		final JTextField reservedAge = new JTextField();
 		final JTextField canceledAge = new JTextField();
-		final JTextField cencellationQuantity = new JTextField();
-		
+		final JTextField cencellationQuantity = new JTextField();		
 
 		JButton deleteUserButton = new JButton("Delete User");
 		JButton addFlightButton = new JButton("Add Flight");
@@ -122,29 +121,33 @@ public class adminPopUp extends JFrame{
 				PreparedStatement stmt = null;
 				try{
 					stmt = myConn.prepareStatement("delete from user where uid = ?");
-					if(uidvalue.trim().isEmpty())
+					if(uidvalue.isEmpty())
 					{
 						JOptionPane.showMessageDialog(null, "Please provide User ID !");
 					}
 					else{
 					stmt.setString(1,uidvalue);
-					stmt.executeUpdate();
-					
-					JOptionPane.showMessageDialog(null, "User deleted Successfully !");
-
-					
-					uIDText.setText("");
+					int row = stmt.executeUpdate();
+					switch(row){
+					case 0: 
+						JOptionPane.showMessageDialog(null, "The provided UID does not exists");
+						break;
+					case 1: 
+						JOptionPane.showMessageDialog(null, "User deleted Successfully !");
+						uIDText.setText("");
+						break;
+					}
 			}}	
 				catch(SQLException exc)
 				{
-					JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+					JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 				}
 				finally{
 					try{
 						stmt.close();
 					}
 					catch(SQLException exc){
-						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+						JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 					}
 				}
 			}
@@ -157,7 +160,7 @@ public class adminPopUp extends JFrame{
 				PreparedStatement stmt = null;
 				try{
 					stmt = myConn.prepareStatement("insert into flightList(aName,numSeats) values(?,?)",Statement.RETURN_GENERATED_KEYS);
-					if(aName.trim().isEmpty() || numOfSeats.trim().isEmpty())
+					if(aName.isEmpty() || numOfSeats.isEmpty())
 					{
 						JOptionPane.showMessageDialog(null, "Please provide airline name and number of seats !");
 					}
@@ -176,14 +179,14 @@ public class adminPopUp extends JFrame{
 					numOfSeatsText.setText("");
 				}}
 				catch(SQLException exc){
-					JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+					JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 				}
 				finally{
 					try{
 						stmt.close();
 					}
 					catch(SQLException exc){
-						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+						JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 					}
 				}
 			}
@@ -196,27 +199,34 @@ public class adminPopUp extends JFrame{
 				PreparedStatement stmt = null;
 				try{
 					stmt = myConn.prepareStatement("Delete from flightList where fid = ? ");
-					if(fid.trim().isEmpty())
+					if(fid.isEmpty())
 					{
 						JOptionPane.showMessageDialog(null, "Please provide flight ID !");
 					}
 					else{
 					stmt.setString(1, fid);
-					stmt.executeUpdate();
+					int row = stmt.executeUpdate();
+					switch(row){
+					case 0: 
+						JOptionPane.showMessageDialog(null, "The provided fid does not exists");
+						break;
+					case 1: 
+						JOptionPane.showMessageDialog(null, "Flight deleted Successfully");
+						flightID.setText("");
+						break;
+					}
 					
-					JOptionPane.showMessageDialog(null, "Flight deleted Successfully");
-					
-					flightID.setText("");
+
 				}}
 				catch(SQLException exc){
-					JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+					JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 				}
 				finally{
 					try{
 						stmt.close();
 					}
 					catch(SQLException exc){
-						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+						JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 					}
 				}
 			}
@@ -232,7 +242,7 @@ public class adminPopUp extends JFrame{
 		            Choice choices = new Choice();
 		             JFrame frame = new JFrame("User's reservation with age > __");
 		             stmt =  myConn.prepareStatement("select * from user JOIN reservation using(uID) group by uid having(age > ?)");
-						if(getAge.trim().isEmpty())
+						if(getAge.isEmpty())
 						{
 							JOptionPane.showMessageDialog(null, "Please provide the age !");
 						}
@@ -254,14 +264,14 @@ public class adminPopUp extends JFrame{
 
 		        }}
 		    } catch (SQLException exc) {
-		    	JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+		    	JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 		    	}
 				finally{
 					try{
 						stmt.close();
 					}
 					catch(SQLException exc){
-						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+						JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 					}
 				}
 			}
@@ -276,7 +286,7 @@ public class adminPopUp extends JFrame{
 		            Choice choices = new Choice();
 		             JFrame frame = new JFrame("User's cancellation with age > __");
 		             stmt =  myConn.prepareStatement("select * from user JOIN canceledReservation using(uID) group by uid having(age > ?)");
-						if(cancelAge.trim().isEmpty())
+						if(cancelAge.isEmpty())
 						{
 							JOptionPane.showMessageDialog(null, "Please provide the age !");
 						}
@@ -299,14 +309,14 @@ public class adminPopUp extends JFrame{
 		        }}
 		    } catch (SQLException exc) {
 
-		    	JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+		    	JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 		    	}
 				finally{
 					try{
 						stmt.close();
 					}
 					catch(SQLException exc){
-						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+						JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 					}
 				}
 			}
@@ -321,7 +331,7 @@ public class adminPopUp extends JFrame{
 		            Choice choices = new Choice();
 		             JFrame frame = new JFrame("Users with more than __ cancellations");
 		             stmt =  myConn.prepareStatement("Select uid,uname,age from user u1 where ? < (select count(*) from canceledreservation where u1.uid = uid group by uid)");
-						if(cancelQuantity.trim().isEmpty())
+						if(cancelQuantity.isEmpty())
 						{
 							JOptionPane.showMessageDialog(null, "Please provide a value !");
 						}
@@ -343,14 +353,14 @@ public class adminPopUp extends JFrame{
 
 		        }}
 		    } catch (SQLException exc) {
-		    	JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+		    	JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 		    	}
 				finally{
 					try{
 						stmt.close();
 					}
 					catch(SQLException exc){
-						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+						JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 					}
 				}
 			}
@@ -368,7 +378,7 @@ public class adminPopUp extends JFrame{
 					String sql = "{call archivedReservation(?)}";
 				
 				cstmt = myConn.prepareCall(sql);
-				if(date.trim().isEmpty())
+				if(date.isEmpty())
 				{
 					JOptionPane.showMessageDialog(null, "Please provide a date, formated 'YYYY-MM-DD' ");
 				}
@@ -383,13 +393,13 @@ public class adminPopUp extends JFrame{
 				}}
 				catch(SQLException exc)
 				{
-					JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+					JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 				}
 				finally{
 					try {
 						cstmt.close();
 					} catch (SQLException exc) {
-						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+						JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 					}
 				}
 			}
@@ -421,14 +431,14 @@ public class adminPopUp extends JFrame{
 					}}
 
 		    } catch (SQLException exc) {
-		    	JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+		    	JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 		    	}
 				finally{
 					try{
 						stmt.close();
 					}
 					catch(SQLException exc){
-						JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+						JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 					}
 				}
 			}
@@ -462,14 +472,14 @@ public class adminPopUp extends JFrame{
 		        }}
 
 		    } catch (SQLException exc) {
-		    	JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+		    	JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 		    }
 		        finally{
 		        	try{
 		        		stmt.close();
 		        	}
 		        	catch(SQLException exc){
-		        		JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+		        		JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 		        	}
 		        }
 			}
@@ -498,14 +508,14 @@ public class adminPopUp extends JFrame{
 		        }}
 
 		    } catch (SQLException exc) {
-		    	JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+		    	JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 		    }
 		        finally{
 		        	try{
 		        		stmt.close();
 		        	}
 		        	catch(SQLException exc){
-		        		JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+		        		JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 		        	}
 		        }
 			}
@@ -534,14 +544,14 @@ public class adminPopUp extends JFrame{
 						frame.setLocationRelativeTo(null);
 		        }
 		    } catch (SQLException exc) {
-		    	JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+		    	JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 		    }
 		        finally{
 		        	try{
 		        		stmt.close();
 		        	}
 		        	catch(SQLException exc){
-		        		JOptionPane.showMessageDialog(null, "An error occured. Error # => "+exc.getErrorCode());
+		        		JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 		        	}
 		        }
 			}
