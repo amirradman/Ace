@@ -378,7 +378,7 @@ public class GeneralUser extends JFrame{
 						String Query = "ID | Airline | Seats | Reservation Date"+" => "+fid +" | "+ aName + " | "+numSeats+" | "+reservedDate;
 						choices.addItem(Query);
 						frame.add(choices);
-						frame.setSize(350, 150);
+						frame.setSize(500, 200);
 						frame.setVisible(true);
 						frame.setLocationRelativeTo(null);
 		        }}

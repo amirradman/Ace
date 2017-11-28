@@ -26,6 +26,15 @@ public class adminPopUp extends JFrame{
 			}
 		});
 	}
+	public boolean isInteger(String value){
+		try{
+			Integer.parseInt(value);
+			return true;
+		}
+		catch(Exception e){
+			return false;
+		}
+	}
 
 	public adminPopUp()
 	{
@@ -232,6 +241,7 @@ public class adminPopUp extends JFrame{
 			}
 		});
 		
+
 		
 		//user's reservation with age older than ?
 		reservationAge.addActionListener(new ActionListener(){
@@ -249,6 +259,7 @@ public class adminPopUp extends JFrame{
 						else{
 		             stmt.setString(1, getAge);
 		             ResultSet rs = stmt.executeQuery();
+		        if(isInteger(getAge)){
 		        if(!rs.isBeforeFirst())
 		        	JOptionPane.showMessageDialog(null, "No user reservation with age >= "+getAge);
 				else{
@@ -264,6 +275,9 @@ public class adminPopUp extends JFrame{
 		            frame.setVisible(true);
 					frame.setLocationRelativeTo(null);
 		        }}}
+		        else
+		        	JOptionPane.showMessageDialog(null, "Please provide an integer !");
+						}
 		    } catch (SQLException exc) {
 		    	JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 		    	}
@@ -294,6 +308,7 @@ public class adminPopUp extends JFrame{
 						else{
 		             stmt.setString(1, cancelAge);
 		             ResultSet rs = stmt.executeQuery();
+		        if(isInteger(cancelAge)){
 				if(!rs.isBeforeFirst())
 					JOptionPane.showMessageDialog(null, "No user cancellation with age >= "+cancelAge);
 				else{
@@ -309,6 +324,9 @@ public class adminPopUp extends JFrame{
 		            frame.setVisible(true);
 					frame.setLocationRelativeTo(null);
 		        }}}
+		        else
+		        	JOptionPane.showMessageDialog(null, "Please provide an integer !");
+						}
 		    } catch (SQLException exc) {
 
 		    	JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
@@ -340,6 +358,7 @@ public class adminPopUp extends JFrame{
 						else{
 		             stmt.setString(1, cancelQuantity);
 		             ResultSet rs = stmt.executeQuery();
+		        if(isInteger(cancelQuantity)){
 		        if(!rs.isBeforeFirst())
 		        	JOptionPane.showMessageDialog(null, "There are no results using the provided value: "+cancelQuantity);
 				else{
@@ -355,6 +374,9 @@ public class adminPopUp extends JFrame{
 		            frame.setVisible(true);
 					frame.setLocationRelativeTo(null);
 		        }}}
+		        else
+		        	JOptionPane.showMessageDialog(null, "Please provide an integer !");
+					}
 		    } catch (SQLException exc) {
 		    	JOptionPane.showMessageDialog(null, "An error occured. Error: => "+exc.getMessage());
 		    	}
