@@ -52,7 +52,7 @@ public class adminPopUp extends JFrame{
 		JButton cancellationAge = new JButton("Cancellation Statistics");
 		JButton loyalCustomer = new JButton("Loyal Customers");
 		JButton reservationAverageAge = new JButton("AvgAge of users with reservation");
-		JButton numUsercancellations = new JButton("Users with more than __ cancellations");
+		JButton numUsercancellations = new JButton("Find users");
 		
 		JPanel northPanel = new JPanel();
 //		northPanel.setLayout(new GridLayout(1,3));
@@ -84,20 +84,20 @@ public class adminPopUp extends JFrame{
 		
 		northPanel.add(new JLabel("                                                  "));
 		
-		northPanel.add(new JLabel("Reservation with age greater than: "));
+		northPanel.add(new JLabel("Reservation with age >= __ : "));
 		northPanel.add(reservedAge);
 		northPanel.add(reservationAge);
 		
 		northPanel.add(new JLabel("                                                  "));
 		
-		northPanel.add(new JLabel("Cancellation with age greater than: "));
+		northPanel.add(new JLabel("Cancellation with age >= __ : "));
 		northPanel.add(canceledAge);
 		northPanel.add(cancellationAge);
 		
 		
 		northPanel.add(new JLabel("                                                  "));
 		
-		northPanel.add(new JLabel("Users with more than __  cancellation(s): "));
+		northPanel.add(new JLabel("Users with >= __ cancellation(s): "));
 		northPanel.add(cencellationQuantity);
 		northPanel.add(numUsercancellations);
 		
@@ -240,8 +240,8 @@ public class adminPopUp extends JFrame{
 				String getAge = reservedAge.getText().trim();
 				try {
 		            Choice choices = new Choice();
-		             JFrame frame = new JFrame("User's reservation with age > __");
-		             stmt =  myConn.prepareStatement("select * from user JOIN reservation using(uID) group by uid having(age > ?)");
+		             JFrame frame = new JFrame("User's reservation with age >= "+getAge);
+		             stmt =  myConn.prepareStatement("select * from user JOIN reservation using(uID) group by uid having(age >= ?)");
 						if(getAge.isEmpty())
 						{
 							JOptionPane.showMessageDialog(null, "Please provide the age !");
@@ -250,7 +250,7 @@ public class adminPopUp extends JFrame{
 		             stmt.setString(1, getAge);
 		             ResultSet rs = stmt.executeQuery();
 		        if(!rs.isBeforeFirst())
-		        	JOptionPane.showMessageDialog(null, "No user reservation with age > "+getAge);
+		        	JOptionPane.showMessageDialog(null, "No user reservation with age >= "+getAge);
 				else{
 		             reservedAge.setText(" ");
 		        while (rs.next()) {
@@ -285,8 +285,8 @@ public class adminPopUp extends JFrame{
 				String cancelAge = canceledAge.getText().trim();
 				try {
 		            Choice choices = new Choice();
-		             JFrame frame = new JFrame("User's cancellation with age > __");
-		             stmt =  myConn.prepareStatement("select * from user JOIN canceledReservation using(uID) group by uid having(age > ?)");
+		             JFrame frame = new JFrame("User's cancellation with age >= "+cancelAge);
+		             stmt =  myConn.prepareStatement("select * from user JOIN canceledReservation using(uID) group by uid having(age >= ?)");
 						if(cancelAge.isEmpty())
 						{
 							JOptionPane.showMessageDialog(null, "Please provide the age !");
@@ -295,7 +295,7 @@ public class adminPopUp extends JFrame{
 		             stmt.setString(1, cancelAge);
 		             ResultSet rs = stmt.executeQuery();
 				if(!rs.isBeforeFirst())
-					JOptionPane.showMessageDialog(null, "No user cancellation with age > "+cancelAge);
+					JOptionPane.showMessageDialog(null, "No user cancellation with age >= "+cancelAge);
 				else{
 		             canceledAge.setText(" ");
 		        while (rs.next()) {
@@ -331,7 +331,7 @@ public class adminPopUp extends JFrame{
 				String cancelQuantity = cencellationQuantity.getText().trim();
 				try {
 		            Choice choices = new Choice();
-		             JFrame frame = new JFrame("Users with more than or equal to __ cancellations");
+		             JFrame frame = new JFrame("Users with more than or equal to " +cancelQuantity+" cancellations");
 		             stmt =  myConn.prepareStatement("Select uid,uname,age from user u1 where (select count(*) from canceledreservation where u1.uid = uid group by uid)>= ?");
 						if(cancelQuantity.isEmpty())
 						{

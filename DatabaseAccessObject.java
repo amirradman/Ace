@@ -8,7 +8,7 @@ public class DatabaseAccessObject {
 	public DatabaseAccessObject(){
 		
 	try{
-		myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/flightReservation?useSSL=true","root","password");
+	 myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/flightReservation?useSSL=true","root","password");
 	}
 	catch(Exception exc){
 		exc.printStackTrace();
