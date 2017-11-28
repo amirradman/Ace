@@ -309,7 +309,7 @@ public class GeneralUser extends JFrame{
 		//ActionListener to find a flight using airline Name
 		findFlight.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				String airlineName = aName.getText().trim();
+				String airlineName = aName.getText().trim().toLowerCase();
 				PreparedStatement stmt = null;
 				try{
 					
